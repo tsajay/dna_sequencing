@@ -18,6 +18,21 @@ def naive(p, t):
             occurrences.append(i)  # all chars matched; record
     return occurrences
 
+def naiveWithNMismatches(p, t, n):
+    occurrences = []
+    for i in range(len(t) - len(p) + 1):  # loop over alignments
+        match = True
+        numMismatches = 0
+        for j in range(len(p)):  # loop over characters
+            if t[i+j] != p[j]:  # compare characters
+                numMismatches += 1
+                if numMismatches > n:
+                    match = False
+                    break
+        if match:
+            occurrences.append(i)  # all chars matched; record
+    return occurrences
+
 def naiveWithReverseComplement(p, t):
     r = reverseComplement(p)
     logging.debug("rc: " + r)
@@ -84,11 +99,14 @@ def readFastq(filename):
 def parseArgs():
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('-r', '--ref', action='store',
+    parser.add_argument('-r', '--ref', action='store', required='true',
                     help='Filename of the reference genome')
 
-    parser.add_argument('-s', '--samp', action='store', 
+    parser.add_argument('-s', '--samp', action='store', required='true',
                     help='Filename of the sample genome')
+
+    parser.add_argument('-m', '--mismatchesAllowed', action='store', type=int, 
+                    default=0, help='Maximum number of mismatches allowed')
 
     args = parser.parse_args()
 
@@ -107,9 +125,13 @@ def main():
     args = parseArgs()
     ref = readGenome(args.ref)
     samp = readGenome(args.samp)
+    mismatchesAllowed = args.mismatchesAllowed
     logging.debug("Sample: " + samp)
     logging.debug("Reference: " + ref)
-    matches = naiveWithReverseComplement(samp, ref)
+    if (mismatchesAllowed == 0):
+        matches = naiveWithReverseComplement(samp, ref)
+    else:
+        matches = naiveWithNMismatches(samp, ref, mismatchesAllowed)
     print ("Matches: %s, Total matches: %d" %(matches, len(matches)))
 
 

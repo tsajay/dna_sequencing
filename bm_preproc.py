@@ -3,6 +3,8 @@
 """bm_preproc.py: Boyer-Moore preprocessing."""
 
 __author__ = "Ben Langmead"
+LOWERCASE_ALPHABET = 'abcdefghijklmnopqrstuvwxyz '
+DNA_SEQUENCING_ALPHABET = 'ACGT'
 
 import unittest
 
@@ -291,6 +293,32 @@ class TestBoyerMoorePreproc(unittest.TestCase):
         self.assertEqual([0, 0, 0, 0, 0, 0, 0, 4, 0, 0, 8], big_l_prime)
         self.assertEqual([0, 0, 0, 0, 0, 0, 0, 4, 4, 4, 8], big_l)
         self.assertEqual([11, 4, 4, 4, 4, 4, 4, 4, 1, 1, 1], small_l_prime)
+
+def boyer_moore(p, p_bm, t):
+    """ Do Boyer-Moore matching. p=pattern, t=text,
+        p_bm=BoyerMoore object for p """
+    i = 0
+    occurrences = []
+    alignments = 0
+    comparisons = 0
+    while i < len(t) - len(p) + 1:
+        shift = 1
+        mismatched = False
+        alignments += 1
+        for j in range(len(p)-1, -1, -1):
+            comparisons += 1
+            if p[j] != t[i+j]:
+                skip_bc = p_bm.bad_character_rule(j, t[i+j])
+                skip_gs = p_bm.good_suffix_rule(j)
+                shift = max(shift, skip_bc, skip_gs)
+                mismatched = True
+                break
+        if not mismatched:
+            occurrences.append(i)
+            skip_gs = p_bm.match_skip()
+            shift = max(shift, skip_gs)
+        i += shift
+    return occurrences, alignments, comparisons
 
 if __name__ == '__main__':
     unittest.main()

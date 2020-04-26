@@ -20,10 +20,14 @@ def naive(p, t):
 
 def naiveWithNMismatches(p, t, n):
     occurrences = []
+    alignments = 0
+    charComparisons = 0
     for i in range(len(t) - len(p) + 1):  # loop over alignments
         match = True
         numMismatches = 0
+        alignments += 1
         for j in range(len(p)):  # loop over characters
+            charComparisons += 1
             if t[i+j] != p[j]:  # compare characters
                 numMismatches += 1
                 if numMismatches > n:
@@ -31,14 +35,14 @@ def naiveWithNMismatches(p, t, n):
                     break
         if match:
             occurrences.append(i)  # all chars matched; record
-    return occurrences
+    return occurrences, alignments, charComparisons
 
-def naiveWithReverseComplement(p, t):
+def naiveWithReverseComplement(p, t, m=0):
     r = reverseComplement(p)
     logging.debug("rc: " + r)
-    occurences = naive(p, t)
+    occurences = naiveWithNMismatches(p, t, m)
     if (p != r):
-        occurences += naive(r, t)
+        occurences += naiveWithNMismatches(r, t, m)
     occurences.sort()
     return occurences
     

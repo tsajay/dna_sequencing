@@ -1,0 +1,60 @@
+{
+
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Boyer Moore match",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            //"args": ["-r",  "lambda_virus.fa",  "-s",  "sample.fasta", "-b"]
+            //"args": ["-r",  "ref.fasta",  "-s",  "sample.fasta", "-b", "-t"]
+            "args": ["-r",  "chr1.GRCh38.excerpt.fasta",  "-s",  "sample.fasta", "-b"]
+        },
+
+        {
+            "name": "Pigeon Hole",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            //"args": ["-r",  "lambda_virus.fa",  "-s",  "sample.fasta", "-b"]
+            //"args": ["-r",  "ref.fasta",  "-s",  "sample.fasta", "-b", "-t"]
+            //"args": ["-r",  "chr1.GRCh38.excerpt.fasta",  "-s",  "sample.fasta", "-p", "-k", "8", "-m", "2"]
+            "args": ["-r",  "chr1.GRCh38.excerpt.fasta",  "-s",  "sample.fasta", "-p", "-k", "8", "-m", "2", "-i", "3"]
+        },
+
+        {
+            "name": "Naive Match",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            //"args": ["-r",  "lambda_virus.fa",  "-s",  "sample.fasta"]
+            //"args": ["-r",  "ref.fasta",  "-s",  "sample.fasta"]
+            "args": ["-r",  "chr1.GRCh38.excerpt.fasta",  "-s",  "sample.fasta"]
+        },
+
+        {
+            "name": "Naive Match with reverse complement",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "args": ["-r",  "lambda_virus.fa",  "-s",  "sample.fasta", "-c"]
+        },
+
+        {
+            "name": "Overlap finder",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "args": ["-o",  "-s", "ERR266411_1.for_asm.fastq",  "-k",  "30"]
+        }
+    ]
+}

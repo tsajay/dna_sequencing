@@ -1,5 +1,6 @@
 import logging
 from itertools import permutations 
+import time as t
 
 logger = logging.getLogger()
 
@@ -87,31 +88,44 @@ def findOverlapsForReads(reads, k):
     k     : Minimum overlap required
     return: Pairs of reads that overlap
     '''
-    overlaps = set()
+    logging.info("Start: find overlaps")    
+    start = t.perf_counter()
+    overlaps = []
     globalKmers = {}
     kmersForRead = {}
     for r in reads:
         addKmersForRead(globalKmers, r, k)
+        kmersForRead[r] = set()
+    duration = t.perf_counter() - start
+    logging.info("Done forming gobal dict of KMERS. Duration: %s secs" %duration)    
+    logging.info("KMERS dict size: %d" %(len(globalKmers)))
 
-    for _, rs in globalKmers.items():
+    start = t.perf_counter()
+    for rs in globalKmers.values():
         for r in rs:
-            if not r in kmersForRead:
-                kmersForRead[r] = set()
             kmersForRead[r].update(rs)
    
+    for r in reads:
+        kmersForRead[r].remove(r)
+        
+    duration = t.perf_counter() - start
+    logging.info("Done forming per read kmer list. Duration: %s secs" %duration)    
+
     logging.debug("KMERS dict: %s" %(globalKmers))
-    logging.info("KMERS dict size: %d" %(len(globalKmers)))
     
+    start = t.perf_counter()
     count = 0
     for r in reads:
         count += 1
         if (count % 100 == 0):
             logging.debug("Processing read %d" %count)
+        if (count % 1000 == 0):
+            logging.info("Processing read %d" %count)
         for rfk  in kmersForRead[r]:
-            if (r == rfk):
-                continue
             if (overlapMinCheck(r, rfk, k)):
-                overlaps.add((r, rfk))
+                overlaps.append((r, rfk))
+    duration = t.perf_counter() - start
+    logging.info("Done forming overlap graphs. Duration: %s secs" %duration)    
 
     return overlaps
 
@@ -136,11 +150,11 @@ def overlapMinCheck(a, b, min_length=3):
         characters long.  If no such overlap exists,
         return 0. """
     start = 0  # start all the way at the left
-    start = a.find(b[:min_length], start)  # look for b's prefix in a
+    start = a.find(b[:min_length])  # look for b's prefix in a
     if start == -1:  # no more occurrences to right
         return 0
     if b.startswith(a[start:]):
-        return len(a)-start
+        return 1
     return 0
     
 

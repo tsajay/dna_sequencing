@@ -5,6 +5,7 @@ import naive_sequencer as naive
 import sequence_file_reader as reader 
 import bm_preproc as bm
 import pigeon_hole as ph
+import overlap_finder as of
 import time as t
 
 
@@ -15,10 +16,10 @@ logger.setLevel(logging.INFO)
 def parseArgs():
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('-r', '--ref', action='store', required='true',
+    parser.add_argument('-r', '--ref', action='store', default='ref.fasta',
                     help='Filename of the reference genome')
 
-    parser.add_argument('-s', '--samp', action='store', required='true',
+    parser.add_argument('-s', '--samp', action='store', default='sample.fasta',
                     help='Filename of the sample genome')
 
     parser.add_argument('-m', '--mismatchesAllowed', action='store', type=int, 
@@ -35,12 +36,18 @@ def parseArgs():
 
     parser.add_argument('-b', '--boyerMoore', action='store_true', 
                     help='Use Boyer Moore algorithm for matching')
+
+    parser.add_argument('-e', '--editDistance', action='store_true', 
+                    help='Find the edit distance between the text and pattern')
     
     parser.add_argument('-c', '--reverseComplement', action='store_true', 
                     help='Also account for reverse complement with naive matching')
 
     parser.add_argument('-t', '--textAlphabet', action='store_true', 
                     help='Use lower-case alphabet set for Boyer Moore (default is only "ACGT"')
+
+    parser.add_argument('-o', '--overlapReadFinder', action='store_true', 
+                    help='Find overlapping reads')
 
     args = parser.parse_args()
 
@@ -68,6 +75,9 @@ def parseArgs():
         print("Pigeon Hole based comparisons require a k-mer size of > 0")
         exit(-1) 
     
+    if (args.kmerSize <= 0 and args.overlapReadFinder):
+        print("Overlap reads finder requries kmer size of > 0")
+        exit(-1)
 
     return args
 
@@ -83,7 +93,10 @@ def main():
     alignments  = 0
     numComparisons = 0
     queries = 0
-    if (not args.boyerMoore and not args.pigeonHole):
+    editDistance = 0
+    overlaps = []
+    duration = 0
+    if (not (args.boyerMoore or args.pigeonHole or args.editDistance or args.overlapReadFinder)):
         # Naive matching algorithm
         if (args.reverseComplement):
             matches = naive.naiveWithReverseComplement(samp, ref, mismatchesAllowed)
@@ -99,19 +112,35 @@ def main():
                 p_bm = bm.BoyerMoore(samp, bm.LOWERCASE_ALPHABET)
             matches, alignments, numComparisons = bm.boyer_moore(samp, p_bm, ref)
 
-        else:
+        if (args.pigeonHole):
             # Pigeon Hole 
             # t, p, k, m, i=0):
             p_ph = ph.PigeonHole(ref, samp, args.kmerSize, args.mismatchesAllowed, args.ival)
             start = t.perf_counter()
             matches, queries, numComparisons = p_ph.getMatches()
             duration = t.perf_counter() - start
+
+        if (args.editDistance):
+            start = t.perf_counter()
+            editDistance = of.approximateMatch(ref, samp)
+            duration = t.perf_counter() - start
+
+        if (args.overlapReadFinder):
+            reads, _ = reader.readFastq(args.samp)
+            start = t.perf_counter()
+            overlaps = of.findOverlapsForReads(reads, args.kmerSize)
+            duration = t.perf_counter() - start
+            sources = of.findSourceNodes(overlaps)
+            logging.debug("All overlaps: %s" %overlaps)
+
     print ("Matches                           :   %s, Total matches: %d" %(matches, len(matches)))
     print ("Aligments (naive and Boyer Moore) :   %d" %(alignments))
     print ("Queries (pigeon-hole only)        :   %d" %(queries))
     print ("Char comparisons                  :   %d" %(numComparisons))
     print ("Duration (seconds)                :   %f" %(duration))
-
+    print ("Edit Distance (edit-distance only):   %d" %(editDistance))
+    print ("Num Overlaps (overlap finder only):   %s" %(len(overlaps)))
+    print ("Num sources (overlap finder only) :   %s" %(len(sources)))
 
 
 if __name__ == "__main__":

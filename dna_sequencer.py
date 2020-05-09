@@ -10,7 +10,7 @@ import time as t
 
 
 logger = logging.getLogger()
-logger.setLevel(logging.INFO)
+logger.setLevel(logging.INFO + 1)
 
 
 def parseArgs():
@@ -49,6 +49,12 @@ def parseArgs():
     parser.add_argument('-o', '--overlapReadFinder', action='store_true', 
                     help='Find overlapping reads')
 
+    parser.add_argument('-g', '--greedySCS', action='store_true', 
+                    help='Find shortest common superstring of all the reads using greedy method')
+
+    parser.add_argument('-d', '--deBruijnSCS', action='store_true', 
+                    help='Find shortest common superstring of all the reads using De Bruijn Graph based method')
+
     args = parser.parse_args()
 
     if (not os.path.isfile(args.ref)):
@@ -79,6 +85,14 @@ def parseArgs():
         print("Overlap reads finder requries kmer size of > 0")
         exit(-1)
 
+    if (args.kmerSize <= 0 and args.greedySCS):
+        print("Greedy SCS finder requries kmer size of > 0")
+        exit(-1)
+
+    if (args.kmerSize <= 0 and args.deBruijnSCS):
+        print("Greedy SCS finder requries kmer size of > 0")
+        exit(-1)
+
     return args
 
 
@@ -96,7 +110,9 @@ def main():
     editDistance = 0
     overlaps = []
     duration = 0
-    if (not (args.boyerMoore or args.pigeonHole or args.editDistance or args.overlapReadFinder)):
+    sources = []
+    scs = ''
+    if (not (args.boyerMoore or args.pigeonHole or args.editDistance or args.overlapReadFinder or args.greedySCS or args.deBruijnSCS)):
         # Naive matching algorithm
         if (args.reverseComplement):
             matches = naive.naiveWithReverseComplement(samp, ref, mismatchesAllowed)
@@ -133,6 +149,26 @@ def main():
             sources = of.findSourceNodes(overlaps)
             logging.debug("All overlaps: %s" %overlaps)
 
+        if (args.greedySCS):
+            reads, _ = reader.readFastq(args.samp)
+            start = t.perf_counter()
+            scs = of.greedy_scs(reads, args.kmerSize)
+            # scs = of.scs(reads)
+            duration = t.perf_counter() - start
+            logging.debug("SCS: %s" %scs)
+            gf = open("greedy_assembly_genome.fa", "w")
+            gf.write(scs)
+            gf.close()
+            print ("Assembled genome in file  greedy_assembly_genome.fa")
+
+        if (args.deBruijnSCS):
+            reads, _ = reader.readFastq(args.samp)
+            start = t.perf_counter()
+            scs = of.de_bruin_graph_scs(reads, args.kmerSize)
+            # scs = of.scs(reads)
+            duration = t.perf_counter() - start
+            logging.debug("SCS: %s" %scs)
+
     print ("Matches                           :   %s, Total matches: %d" %(matches, len(matches)))
     print ("Aligments (naive and Boyer Moore) :   %d" %(alignments))
     print ("Queries (pigeon-hole only)        :   %d" %(queries))
@@ -141,6 +177,8 @@ def main():
     print ("Edit Distance (edit-distance only):   %d" %(editDistance))
     print ("Num Overlaps (overlap finder only):   %s" %(len(overlaps)))
     print ("Num sources (overlap finder only) :   %s" %(len(sources)))
+    print ("SCS length  (greedy SCS only)     :   %s" %(len(scs)))
+    
 
 
 if __name__ == "__main__":

@@ -6,6 +6,21 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "dna_seq_c++",
+            "cwd": "/home/ajay/code/epi_2019/dna_sequencing",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "/home/ajay/code/epi_2019/dna_sequencing/dna_sequencer_debug",
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ]
+        },
+        {
             "name": "Boyer Moore match",
             "type": "python",
             "request": "launch",
@@ -55,6 +70,15 @@
             "program": "${file}",
             "console": "integratedTerminal",
             "args": ["-o",  "-s", "ERR266411_1.for_asm.fastq",  "-k",  "30"]
+        },
+
+        {
+            "name": "Greedy SCS",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "args": ["-g",  "-s", "ads1_week4_reads.fq",  "-k",  "30"]
         }
     ]
 }

@@ -27,7 +27,7 @@ A collection of algorithms for DNA sequence alignment, approximate pattern match
 | Approximate Match | `overlap_finder.py` | Finds the minimum edit distance of a pattern against all substrings of a reference |
 
 ### Genome Assembly
-~~~~
+
 | Algorithm | Module | Description |
 |-----------|--------|-------------|
 | Overlap Graph | `overlap_finder.py` | Builds a k-mer dictionary across all reads and computes pairwise suffix-prefix overlaps |
